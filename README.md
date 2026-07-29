@@ -1,1 +1,1 @@
-# Global-Partners-Business-Analysis-Project
+# Global Partners Business Analysis Project
