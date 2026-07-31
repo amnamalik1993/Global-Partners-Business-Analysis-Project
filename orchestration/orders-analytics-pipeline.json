@@ -1,0 +1,130 @@
+{
+  "Comment": "Restaurant Orders Analytics Pipeline",
+  "StartAt": "RDS_To_Source_Raw",
+  "States": {
+    "RDS_To_Source_Raw": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "rds_to_s3_src_tables"
+      },
+      "Next": "Bronze_Processing"
+    },
+    "Bronze_Processing": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "orders_bronze_processing"
+      },
+      "Next": "Silver_Processing"
+    },
+    "Silver_Processing": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "orders_silver_processing"
+      },
+      "Next": "Gold_Metrics"
+    },
+    "Gold_Metrics": {
+      "Type": "Parallel",
+      "Branches": [
+        {
+          "StartAt": "CLV",
+          "States": {
+            "CLV": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::glue:startJobRun.sync",
+              "Parameters": {
+                "JobName": "orders_gold_clv_metric"
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "Churn",
+          "States": {
+            "Churn": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::glue:startJobRun.sync",
+              "Parameters": {
+                "JobName": "orders_gold_churn_metric"
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "Sales",
+          "States": {
+            "Sales": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::glue:startJobRun.sync",
+              "Parameters": {
+                "JobName": "orders_gold_sales_trends_metric"
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "Loyalty",
+          "States": {
+            "Loyalty": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::glue:startJobRun.sync",
+              "Parameters": {
+                "JobName": "orders_gold_loyalty_program_metrics"
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "Location",
+          "States": {
+            "Location": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::glue:startJobRun.sync",
+              "Parameters": {
+                "JobName": "orders_gold_top_performing_locations_metric"
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "Customer_Segmentation",
+          "States": {
+            "Customer_Segmentation": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::glue:startJobRun.sync",
+              "Parameters": {
+                "JobName": "orders_gold_customer_segmentation_metric"
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "Pricing_Discount",
+          "States": {
+            "Pricing_Discount": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::glue:startJobRun.sync",
+              "Parameters": {
+                "JobName": "orders_gold_pricing_discount_metrics"
+              },
+              "End": true
+            }
+          }
+        }
+      ],
+      "Next": "Pipeline_Complete"
+    },
+    "Pipeline_Complete": {
+      "Type": "Succeed"
+    }
+  }
+}
